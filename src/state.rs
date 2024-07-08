@@ -161,6 +161,8 @@ impl<'a> State<'a> {
             // This happens when the a frame takes too long to present
             Err(wgpu::SurfaceError::Timeout) => log::warn!("Surface timeout"),
         }
+
+        println!("Redraw ");
     }
 }
 

@@ -10,11 +10,16 @@ use winit::{
 mod state;
 use state::*;
 
+mod timer;
+use timer::*;
+
 async fn async_run() {
     let event_loop = EventLoop::new().unwrap();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
     let mut state = State::new(&window).await;
+
+    let mut time = Timer::new();
 
     event_loop
         .run(move |event, control_flow| match event {
@@ -39,6 +44,11 @@ async fn async_run() {
                             if is_key_pressed(event, KeyCode::Escape) {
                                 control_flow.exit();
                             }
+
+                            println!("{}", time.str_reset());
+
+                            // std::thread::sleep(std::time::Duration::from_millis(16));
+                            // OF COURSE!! this function is called multiple times. so most calls are very quick
                         }
                     }
                 }
