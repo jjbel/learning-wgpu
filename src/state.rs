@@ -5,6 +5,7 @@ use winit::{
     window::WindowBuilder,
 };
 
+use std::sync::Arc;
 use winit::window::Window;
 
 pub struct State<'a> {
@@ -13,13 +14,14 @@ pub struct State<'a> {
     pub queue: wgpu::Queue,
     pub config: wgpu::SurfaceConfiguration,
     pub size: winit::dpi::PhysicalSize<u32>,
-    pub window: &'a Window,
+    pub window: Arc<Window>,
     pub surface_configured: bool,
 }
 
 impl<'a> State<'a> {
-    pub async fn new(window: &'a Window) -> State<'a> {
-        let size = window.inner_size();
+    pub async fn new(window: Window) -> State<'a> {
+        let window_arc = Arc::new(window);
+        let size = window_arc.inner_size();
 
         // The instance is a handle to our GPU
         // BackendBit::PRIMARY => Vulkan + Metal + DX12 + Browser WebGPU
@@ -28,7 +30,7 @@ impl<'a> State<'a> {
             ..Default::default()
         });
 
-        let surface = instance.create_surface(window).unwrap();
+        let surface = instance.create_surface(window_arc.clone()).unwrap();
 
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
@@ -78,7 +80,7 @@ impl<'a> State<'a> {
             queue,
             config,
             size,
-            window,
+            window: window_arc,
             surface_configured: false,
         }
     }
