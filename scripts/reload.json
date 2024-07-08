@@ -1,7 +1,7 @@
 {
     "commands": {
         "all": [
-            "cargo run --quiet"
+            "cargo run --quiet --release"
         ]
     },
     "use_gitignore": true

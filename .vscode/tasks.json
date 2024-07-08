@@ -6,7 +6,7 @@
         {
             "label": "Run Debug",
             "type": "shell",
-            "command": "clear ; cargo run --quiet",
+            "command": "clear ; cargo run --quiet --release",
             "presentation": {
                 "reveal": "always",
                 "showReuseMessage": false,
