@@ -1,11 +1,6 @@
 #![allow(unused)]
 
-use winit::{
-    event::*,
-    event_loop::EventLoop,
-    keyboard::{KeyCode, PhysicalKey},
-    window::WindowBuilder,
-};
+use winit::{event::*, event_loop::EventLoop, keyboard::KeyCode};
 
 mod state;
 use state::*;
@@ -33,7 +28,7 @@ async fn async_run() {
                     if is_key_pressed(event, KeyCode::Escape) {
                         control_flow.exit();
                     }
-                    pr!(time.str_reset());
+                    // pr!(time.str_reset());
                 }
             }
             _ => {}
