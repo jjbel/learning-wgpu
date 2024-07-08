@@ -14,12 +14,14 @@ pub struct State<'a> {
     pub queue: wgpu::Queue,
     pub config: wgpu::SurfaceConfiguration,
     pub size: winit::dpi::PhysicalSize<u32>,
-    pub window: Arc<Window>,
+    pub window: Arc<Window>, // do we rly need Arc ?
     pub surface_configured: bool,
 }
 
 impl<'a> State<'a> {
-    pub async fn new(window: Window) -> State<'a> {
+    pub async fn new(event_loop: &EventLoop<()>) -> State<'a> {
+        let window = WindowBuilder::new().build(&event_loop).unwrap();
+
         let window_arc = Arc::new(window);
         let size = window_arc.inner_size();
 
