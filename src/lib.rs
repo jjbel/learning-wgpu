@@ -13,6 +13,9 @@ use state::*;
 mod timer;
 use timer::*;
 
+mod print;
+use print::*;
+
 async fn async_run() {
     let event_loop = EventLoop::new().unwrap();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
@@ -32,7 +35,7 @@ async fn async_run() {
                     if is_key_pressed(event, KeyCode::Escape) {
                         control_flow.exit();
                     }
-                    println!("{}", time.str_reset());
+                    pr!(time.str_reset());
                 }
             }
             _ => {}
