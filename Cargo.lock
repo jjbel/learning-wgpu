@@ -1739,7 +1739,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "wgpu_tut2"
+name = "wgpu_tut"
 version = "0.1.0"
 dependencies = [
  "env_logger",
