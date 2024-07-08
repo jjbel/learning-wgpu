@@ -25,16 +25,7 @@ async fn async_run() {
             } if window_id == state.window.id() => {
                 if !state.input(event) {
                     match event {
-                        WindowEvent::CloseRequested
-                        | WindowEvent::KeyboardInput {
-                            event:
-                                KeyEvent {
-                                    state: ElementState::Pressed,
-                                    physical_key: PhysicalKey::Code(KeyCode::Escape),
-                                    ..
-                                },
-                            ..
-                        } => control_flow.exit(),
+                        WindowEvent::CloseRequested => control_flow.exit(),
 
                         WindowEvent::Resized(physical_size) => {
                             log::info!("Resized: {physical_size:?}");
@@ -69,7 +60,11 @@ async fn async_run() {
                                 Err(wgpu::SurfaceError::Timeout) => log::warn!("Surface timeout"),
                             }
                         }
-                        _ => {}
+                        _ => {
+                            if is_key_pressed(event, KeyCode::Escape) {
+                                control_flow.exit();
+                            }
+                        }
                     }
                 }
             }

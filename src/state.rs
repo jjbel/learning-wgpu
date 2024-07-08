@@ -135,3 +135,20 @@ impl<'a> State<'a> {
         Ok(())
     }
 }
+
+
+pub fn is_key_pressed(event: &WindowEvent, keycode: KeyCode) -> bool {
+    match event {
+        WindowEvent::KeyboardInput {
+            event:
+                KeyEvent {
+                    state: ElementState::Pressed,
+                    physical_key: PhysicalKey::Code(code),
+                    ..
+                },
+            ..
+        } => *code == keycode,
+        _ => false,
+    }
+}
+
