@@ -10,7 +10,9 @@
             "presentation": {
                 "reveal": "always",
                 "showReuseMessage": false,
-                "clear": true
+                "clear": true,
+                "panel": "dedicated",
+                "focus": false
             },
             "problemMatcher": [],
             "group": {
