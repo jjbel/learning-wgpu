@@ -1,0 +1,8 @@
+{
+    "commands": {
+        "all": [
+            "cargo run --quiet"
+        ]
+    },
+    "use_gitignore": true
+}
