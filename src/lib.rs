@@ -15,7 +15,6 @@ async fn async_run() {
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
     let mut state = State::new(&window).await;
-    let mut surface_configured = false;
 
     event_loop
         .run(move |event, control_flow| match event {
@@ -29,37 +28,13 @@ async fn async_run() {
 
                         WindowEvent::Resized(physical_size) => {
                             log::info!("Resized: {physical_size:?}");
-                            surface_configured = true;
+                            state.surface_configured = true;
+                            // TODO: what sets surface_configured to false?
                             state.resize(*physical_size);
                         }
 
-                        WindowEvent::RedrawRequested => {
-                            // This tells winit that we want another frame after this one
-                            state.window.request_redraw();
+                        WindowEvent::RedrawRequested => state.request_redraw(control_flow),
 
-                            if !surface_configured {
-                                return;
-                            }
-
-                            // state.update();
-                            match state.render() {
-                                Ok(_) => {}
-
-                                // Reconfigure the surface if it's lost or outdated
-                                Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => {
-                                    state.resize(state.size)
-                                }
-
-                                // The system is out of memory, we should probably quit
-                                Err(wgpu::SurfaceError::OutOfMemory) => {
-                                    log::error!("OutOfMemory");
-                                    control_flow.exit();
-                                }
-
-                                // This happens when the a frame takes too long to present
-                                Err(wgpu::SurfaceError::Timeout) => log::warn!("Surface timeout"),
-                            }
-                        }
                         _ => {
                             if is_key_pressed(event, KeyCode::Escape) {
                                 control_flow.exit();

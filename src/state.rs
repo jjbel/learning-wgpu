@@ -1,6 +1,6 @@
 use winit::{
     event::*,
-    event_loop::EventLoop,
+    event_loop::{ControlFlow, EventLoop},
     keyboard::{KeyCode, PhysicalKey},
     window::WindowBuilder,
 };
@@ -14,6 +14,7 @@ pub struct State<'a> {
     pub config: wgpu::SurfaceConfiguration,
     pub size: winit::dpi::PhysicalSize<u32>,
     pub window: &'a Window,
+    pub surface_configured: bool,
 }
 
 impl<'a> State<'a> {
@@ -78,6 +79,7 @@ impl<'a> State<'a> {
             config,
             size,
             window,
+            surface_configured: false,
         }
     }
 
@@ -134,8 +136,33 @@ impl<'a> State<'a> {
 
         Ok(())
     }
-}
 
+    pub fn request_redraw(&mut self, control_flow: &winit::event_loop::EventLoopWindowTarget<()>) {
+        // This tells winit that we want another frame after this one
+        self.window.request_redraw();
+
+        if !self.surface_configured {
+            return;
+        }
+
+        // state.update();
+        match self.render() {
+            Ok(_) => {}
+
+            // Reconfigure the surface if it's lost or outdated
+            Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => self.resize(self.size),
+
+            // The system is out of memory, we should probably quit
+            Err(wgpu::SurfaceError::OutOfMemory) => {
+                log::error!("OutOfMemory");
+                control_flow.exit();
+            }
+
+            // This happens when the a frame takes too long to present
+            Err(wgpu::SurfaceError::Timeout) => log::warn!("Surface timeout"),
+        }
+    }
+}
 
 pub fn is_key_pressed(event: &WindowEvent, keycode: KeyCode) -> bool {
     match event {
@@ -151,4 +178,3 @@ pub fn is_key_pressed(event: &WindowEvent, keycode: KeyCode) -> bool {
         _ => false,
     }
 }
-
