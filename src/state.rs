@@ -164,6 +164,27 @@ impl<'a> State<'a> {
 
         println!("Redraw ");
     }
+
+    pub fn handle_events(
+        &mut self,
+        event: &WindowEvent,
+        control_flow: &winit::event_loop::EventLoopWindowTarget<()>,
+    ) {
+        match event {
+            WindowEvent::CloseRequested => control_flow.exit(),
+
+            WindowEvent::Resized(physical_size) => {
+                log::info!("Resized: {physical_size:?}");
+                self.surface_configured = true;
+                // TODO: what sets surface_configured to false?
+                self.resize(*physical_size);
+            }
+
+            WindowEvent::RedrawRequested => self.request_redraw(control_flow),
+
+            _ => {}
+        }
+    }
 }
 
 pub fn is_key_pressed(event: &WindowEvent, keycode: KeyCode) -> bool {
