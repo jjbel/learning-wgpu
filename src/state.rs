@@ -21,6 +21,10 @@ pub struct State<'a> {
     pub window: Arc<Window>, // do we rly need Arc ?
     pub surface_configured: bool,
     pub render_pipeline: wgpu::RenderPipeline,
+
+    pub render_view: Option<wgpu::TextureView>,
+    pub render_encoder: Option<wgpu::CommandEncoder>,
+    pub render_pass: Option<wgpu::RenderPass<'a>>,
 }
 
 impl<'a> State<'a> {
@@ -146,6 +150,10 @@ impl<'a> State<'a> {
             window: window_arc,
             surface_configured: false,
             render_pipeline,
+
+            render_view: None,
+            render_encoder: None,
+            render_pass: None,
         }
     }
 
@@ -166,23 +174,27 @@ impl<'a> State<'a> {
         self.surface.configure(&self.device, &self.config);
     }
 
+    // TODO WTF just using 'a here worked?
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         let output = self.surface.get_current_texture()?;
-        let view = output
-            .texture
-            .create_view(&wgpu::TextureViewDescriptor::default());
+        self.render_view = Some(
+            output
+                .texture
+                .create_view(&wgpu::TextureViewDescriptor::default()),
+        );
 
-        let mut encoder = self
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+        self.render_encoder = Some(self.device.create_command_encoder(
+            &wgpu::CommandEncoderDescriptor {
                 label: Some("Render Encoder"),
-            });
+            },
+        ));
 
-        {
-            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+        // {
+        self.render_pass = Some(self.render_encoder.as_mut().unwrap().begin_render_pass(
+            &wgpu::RenderPassDescriptor {
                 label: Some("Render Pass"),
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &view,
+                    view: &self.render_view.as_ref().unwrap(),
                     resolve_target: None,
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(wgpu::Color {
@@ -197,17 +209,29 @@ impl<'a> State<'a> {
                 depth_stencil_attachment: None,
                 occlusion_query_set: None,
                 timestamp_writes: None,
-            });
+            },
+        ));
 
-            render_pass.set_pipeline(&self.render_pipeline);
+        // self.render_pass
+        //     .as_mut()
+        //     .unwrap()
+        //     .set_pipeline(&self.render_pipeline);
 
-            let timer = Timer::new();
-            render_pass.draw(0..3, 0..1);
-            pr!(timer.str());
-        }
+        self.render_pass.as_mut().unwrap().draw(0..3, 0..1);
 
-        self.queue.submit(std::iter::once(encoder.finish()));
+        // FIXME use a scope instead of drop?
+        // begin_render_pass() borrows encoder mutably (aka &mut self)
+        self.render_pass = None;
+        // drop(self.render_pass);
+        // }
+
+        self.queue.submit(std::iter::once(
+            self.render_encoder.as_mut().unwrap().finish(), // TODO or as_mut?
+        ));
         output.present();
+
+        self.render_encoder = None;
+        self.render_view = None;
 
         Ok(())
     }
