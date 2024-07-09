@@ -8,6 +8,10 @@ use winit::{
 use std::sync::Arc;
 use winit::window::Window;
 
+use crate::pr;
+
+const MIN_WINDOW_SIZE: u32 = 50;
+
 pub struct State<'a> {
     pub surface: wgpu::Surface<'a>,
     pub device: wgpu::Device,
@@ -93,12 +97,14 @@ impl<'a> State<'a> {
     }
 
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
-        if new_size.width > 0 && new_size.height > 0 {
-            self.size = new_size;
-            self.config.width = new_size.width;
-            self.config.height = new_size.height;
-            self.surface.configure(&self.device, &self.config);
-        }
+        self.size.width = new_size.width.max(MIN_WINDOW_SIZE);
+        self.size.height = new_size.height.max(MIN_WINDOW_SIZE);
+        // FIXME MIN_WINDOW_SIZE doesn't work?
+        // prints 50x50 but remains smaller than that
+
+        self.config.width = self.size.width;
+        self.config.height = self.size.height;
+        self.surface.configure(&self.device, &self.config);
     }
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
