@@ -64,6 +64,9 @@ impl<'a> State<'a> {
         // Shader code in this tutorial assumes an Srgb surface texture. Using a different
         // one will result all the colors comming out darker. If you want to support non
         // Srgb surfaces, you'll need to account for that when drawing to the frame.
+
+        // TODO srgb: what if we just choose an rgb texture?
+
         let surface_format = surface_caps
             .formats
             .iter()
@@ -81,10 +84,7 @@ impl<'a> State<'a> {
             view_formats: vec![],
         };
 
-        let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("Shader"),
-            source: wgpu::ShaderSource::Wgsl(include_str!("shader.wgsl").into()),
-        });
+        let shader = device.create_shader_module(wgpu::include_wgsl!("shader.wgsl"));
 
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
@@ -113,18 +113,18 @@ impl<'a> State<'a> {
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
             }),
+
             primitive: wgpu::PrimitiveState {
                 topology: wgpu::PrimitiveTopology::TriangleList,
                 strip_index_format: None,
                 front_face: wgpu::FrontFace::Ccw,
-                cull_mode: Some(wgpu::Face::Back),
+                cull_mode: None, // TODO skip culling right?
+                // cull_mode: Some(wgpu::Face::Back),
                 // Setting this to anything other than Fill requires Features::POLYGON_MODE_LINE
                 // or Features::POLYGON_MODE_POINT
                 polygon_mode: wgpu::PolygonMode::Fill,
-                // Requires Features::DEPTH_CLIP_CONTROL
-                unclipped_depth: false,
-                // Requires Features::CONSERVATIVE_RASTERIZATION
-                conservative: false,
+                unclipped_depth: false, // Requires Features::DEPTH_CLIP_CONTROL
+                conservative: false,    // Requires Features::CONSERVATIVE_RASTERIZATION
             },
             depth_stencil: None,
             multisample: wgpu::MultisampleState {
