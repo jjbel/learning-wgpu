@@ -8,8 +8,6 @@ use winit::{
 use std::sync::Arc;
 use winit::window::Window;
 
-use crate::{pr, Timer};
-
 const MIN_WINDOW_SIZE: u32 = 50;
 
 pub struct State<'a> {
