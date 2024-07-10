@@ -117,7 +117,7 @@ impl<'a> State<'a> {
                 topology: wgpu::PrimitiveTopology::TriangleList,
                 strip_index_format: None,
                 front_face: wgpu::FrontFace::Ccw,
-                cull_mode: None, // TODO skip culling right?
+                cull_mode: None,
                 // cull_mode: Some(wgpu::Face::Back),
                 // Setting this to anything other than Fill requires Features::POLYGON_MODE_LINE
                 // or Features::POLYGON_MODE_POINT
@@ -174,6 +174,9 @@ impl<'a> State<'a> {
             },
         ));
 
+        // the result of as_mut.unwrap only lasts for the duration of the function call apparently
+        // but render_pass lives for 'a ?
+
         self.render_pass = Some(self.render_encoder.as_mut().unwrap().begin_render_pass(
             &wgpu::RenderPassDescriptor {
                 label: Some("Render Pass"),
@@ -203,18 +206,13 @@ impl<'a> State<'a> {
 
         self.render_pass.as_mut().unwrap().draw(0..3, 0..1);
 
-        // begin_render_pass() borrows encoder mutably (aka &mut self)
-        self.render_pass = None;
-        // drop(self.render_pass);
+        // ideally I would put this in a separate `finish_render()` function
+        // then between the `render` and `finish_render` functions, the user could call the draw functions
 
         self.queue.submit(std::iter::once(
-            self.render_encoder.as_mut().unwrap().finish(), // TODO or as_mut?
+            self.render_encoder.as_mut().unwrap().finish(),
         ));
         output.present();
-
-        self.render_encoder = None;
-        self.render_view = None;
-
         Ok(())
     }
 
