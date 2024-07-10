@@ -8,18 +8,17 @@ use winit::{
 use std::sync::Arc;
 use winit::window::Window;
 
-const MIN_WINDOW_SIZE: u32 = 50;
-
 pub struct State<'a> {
     pub surface: wgpu::Surface<'a>,
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
     pub config: wgpu::SurfaceConfiguration,
     pub size: winit::dpi::PhysicalSize<u32>,
-    pub window: Arc<Window>, // do we rly need Arc ?
+    pub window: Arc<Window>, // wrapped window in an Arc so that I can create it inside State::new()
     pub surface_configured: bool,
     pub render_pipeline: wgpu::RenderPipeline,
 
+    // ADDED BY ME !! :
     pub render_view: Option<wgpu::TextureView>,
     pub render_encoder: Option<wgpu::CommandEncoder>,
     pub render_pass: Option<wgpu::RenderPass<'a>>,
@@ -66,8 +65,6 @@ impl<'a> State<'a> {
         // Shader code in this tutorial assumes an Srgb surface texture. Using a different
         // one will result all the colors comming out darker. If you want to support non
         // Srgb surfaces, you'll need to account for that when drawing to the frame.
-
-        // TODO srgb: what if we just choose an rgb texture?
 
         let surface_format = surface_caps
             .formats
@@ -155,24 +152,14 @@ impl<'a> State<'a> {
         }
     }
 
-    #[allow(unused_variables)]
-    pub fn input(&mut self, event: &WindowEvent) -> bool {
-        false
-        // FIXME is input() needed?
-    }
-
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
-        self.size.width = new_size.width.max(MIN_WINDOW_SIZE);
-        self.size.height = new_size.height.max(MIN_WINDOW_SIZE);
-        // FIXME MIN_WINDOW_SIZE doesn't work?
-        // prints 50x50 but remains smaller than that
-
+        self.size.width = new_size.width.max(1);
+        self.size.height = new_size.height.max(1);
         self.config.width = self.size.width;
         self.config.height = self.size.height;
         self.surface.configure(&self.device, &self.config);
     }
 
-    // TODO WTF just using 'a here worked?
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         let output = self.surface.get_current_texture()?;
         self.render_view = Some(
@@ -187,7 +174,6 @@ impl<'a> State<'a> {
             },
         ));
 
-        // {
         self.render_pass = Some(self.render_encoder.as_mut().unwrap().begin_render_pass(
             &wgpu::RenderPassDescriptor {
                 label: Some("Render Pass"),
@@ -210,18 +196,16 @@ impl<'a> State<'a> {
             },
         ));
 
-        // self.render_pass
-        //     .as_mut()
-        //     .unwrap()
-        //     .set_pipeline(&self.render_pipeline);
+        self.render_pass
+            .as_mut()
+            .unwrap()
+            .set_pipeline(&self.render_pipeline);
 
         self.render_pass.as_mut().unwrap().draw(0..3, 0..1);
 
-        // FIXME use a scope instead of drop?
         // begin_render_pass() borrows encoder mutably (aka &mut self)
         self.render_pass = None;
         // drop(self.render_pass);
-        // }
 
         self.queue.submit(std::iter::once(
             self.render_encoder.as_mut().unwrap().finish(), // TODO or as_mut?
@@ -258,8 +242,6 @@ impl<'a> State<'a> {
             // This happens when the a frame takes too long to present
             Err(wgpu::SurfaceError::Timeout) => log::warn!("Surface timeout"),
         }
-
-        // println!("Redraw ");
     }
 
     pub fn handle_events(
@@ -273,7 +255,6 @@ impl<'a> State<'a> {
             WindowEvent::Resized(physical_size) => {
                 log::info!("Resized: {physical_size:?}");
                 self.surface_configured = true;
-                // TODO: what sets surface_configured to false?
                 self.resize(*physical_size);
             }
 
@@ -281,20 +262,5 @@ impl<'a> State<'a> {
 
             _ => {}
         }
-    }
-}
-
-pub fn is_key_pressed(event: &WindowEvent, keycode: KeyCode) -> bool {
-    match event {
-        WindowEvent::KeyboardInput {
-            event:
-                KeyEvent {
-                    state: ElementState::Pressed,
-                    physical_key: PhysicalKey::Code(code),
-                    ..
-                },
-            ..
-        } => *code == keycode,
-        _ => false,
     }
 }
