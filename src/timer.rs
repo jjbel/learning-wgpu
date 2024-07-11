@@ -1,5 +1,7 @@
 use std::time::{Duration, Instant};
 
+use crate::pr;
+
 pub struct Timer {
     pub instant: Instant,
 }
@@ -35,5 +37,9 @@ impl Timer {
 
     pub fn delay_until(&self, total_duration: Duration) {
         todo!();
+    }
+
+    pub fn print_reset(&mut self, message: &str) {
+        pr!(self.str_reset(), message);
     }
 }
